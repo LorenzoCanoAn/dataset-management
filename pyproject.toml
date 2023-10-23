@@ -2,10 +2,10 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 [project]
-name = "voxel_grid_dataset"
+name = "dataset_management"
 version = "0.0.1"
 authors = [{ name = "Lorenzo Cano", email = "lcano@unizar.es" }]
-description = "classes to handle io of voxel datasets"
+description = "Handlers for files in datasets"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = ["Programming Language :: Python :: 3"]
@@ -15,4 +15,4 @@ only-packages = true
 sources = ["src"]
 [tool.hatch.build.targets.wheel]
 only-include = ["src"]
-packages = ["src/voxel_grid_dataset"]
+packages = ["src/dataset_management"]

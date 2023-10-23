@@ -14,7 +14,7 @@ class DataFoldersManager:
         else:
             return cls.instances[0]
 
-    def __init__(self, datafolder_group="voxel_datasets"):
+    def __init__(self, datafolder_group="depth_image_feature_extraction"):
         self.datafolder_group = datafolder_group
         self.index_dict = []
         self.index: list[DataFolder] = []
