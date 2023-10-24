@@ -165,6 +165,7 @@ class DataFolder:
         self.dataset_type = dataset_type
         self.path_to_env = path_to_env
         self.identifiers = identifiers
+        self.__file_paths = None
 
     def to_dict(self):
         return {
@@ -191,7 +192,15 @@ class DataFolder:
 
     @property
     def file_paths(self):
-        return [os.path.join(self.path, file_name) for file_name in self.file_names]
+        if self.__file_paths is None:
+            self.__file_paths = [
+                os.path.join(self.path, file_name) for file_name in self.file_names
+            ]
+        return self.__file_paths
+
+    @property
+    def n_files(self):
+        return len(self.file_paths)
 
     @classmethod
     def from_dict(cls, manager, dict):
@@ -312,6 +321,10 @@ class DatasetInputManager:
     @property
     def n_datapoints(self):
         return len(self.file_paths)
+
+    @property
+    def n_datafolders(self):
+        return len(self.selected_datafolders)
 
 
 class DatasetOutputManager:
