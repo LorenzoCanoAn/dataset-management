@@ -41,7 +41,8 @@ class DatasetFileManagerToPytorchDataset(Dataset):
         self.__labels = None  # Indexable
         self.__inputs = None  # Indexable
         self.import_args(**kwargs)
-        self.initialize_dataset()
+        if self.mode == "read":
+            self.initialize_dataset()
 
     def new_env(self, path_to_env):
         if self.mode != "write":
