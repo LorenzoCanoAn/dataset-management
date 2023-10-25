@@ -24,7 +24,7 @@ class DatasetFileManagerToPytorchDataset(Dataset):
                 "identifiers": identifiers,
             }
             if not name is None:
-                wanted_characteristics["name"] = self.name
+                wanted_characteristics["dataset_name"] = self.name
             self.input_manager = DatasetInputManager(
                 wanted_characteristics, unwanted_characteristics
             )
@@ -35,11 +35,10 @@ class DatasetFileManagerToPytorchDataset(Dataset):
             self.output_manager = DatasetOutputManager(
                 self.name, self.__class__.__name__, identifiers
             )
-
-        self.__loaded_labels = None  # Indexable
-        self.__loaded_inputs = None  # Indexable
-        self.__labels = None  # Indexable
-        self.__inputs = None  # Indexable
+        self._loaded_labels = None  # Indexable
+        self._loaded_inputs = None  # Indexable
+        self._labels = None  # Indexable
+        self._inputs = None  # Indexable
         self.import_args(**kwargs)
         if self.mode == "read":
             self.initialize_dataset()
@@ -50,10 +49,10 @@ class DatasetFileManagerToPytorchDataset(Dataset):
         self.output_manager.new_datafolder(path_to_env)
 
     def __len__(self):
-        return len(self.__labels)
+        return len(self._labels)
 
     def __getitem__(self, idx):
-        return self.__inputs[idx], self.__labels[idx]
+        return self._inputs[idx], self._labels[idx]
 
     def write_datapoint(self, input_data, label):
         path = self.output_manager.get_path_to_new_train_sample()
@@ -66,16 +65,17 @@ class DatasetFileManagerToPytorchDataset(Dataset):
         return input_data, label
 
     def load_dataset(self):
+        print("Loading Dataset")
         n_samples = len(self.input_manager.file_paths)
         for i, file_path in tqdm(enumerate(self.input_manager.file_paths)):
             inpt, labl = self.read_sample(file_path)
             if i == 0:
                 inpts_shape = [n_samples] + list(inpt.shape)
                 labls_shape = [n_samples] + list(labl.shape)
-                self.__loaded_inputs = torch.zeros(inpts_shape)
-                self.__loaded_labels = torch.zeros(labls_shape)
-            self.__loaded_inputs[i] = torch.Tensor(inpt)
-            self.__loaded_labels[i] = torch.Tensor(labl)
+                self._loaded_inputs = torch.zeros(inpts_shape)
+                self._loaded_labels = torch.zeros(labls_shape)
+            self._loaded_inputs[i] = torch.Tensor(inpt)
+            self._loaded_labels[i] = torch.Tensor(labl)
 
     def process_raw_inputs(self, *args, **kwargs):
         raise Exception("This function must be implemented in child class")
@@ -84,5 +84,6 @@ class DatasetFileManagerToPytorchDataset(Dataset):
         raise Exception("This function must be implemented in child class")
 
     def initialize_dataset(self):
+        print("Initializing dataset")
         self.load_dataset()
         self.process_raw_inputs()
