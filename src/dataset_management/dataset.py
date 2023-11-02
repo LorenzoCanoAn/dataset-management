@@ -18,6 +18,7 @@ class DatasetFileManagerToPytorchDataset(Dataset):
     ):
         self.name = name
         self.mode = mode
+        self.identifiers = identifiers
         if self.mode == "read":
             wanted_characteristics = {
                 "dataset_type": self.__class__.__name__,
@@ -52,7 +53,8 @@ class DatasetFileManagerToPytorchDataset(Dataset):
         return len(self._labels)
 
     def __getitem__(self, idx):
-        return self._inputs[idx], self._labels[idx]
+        inputs, labels =self._inputs[idx], self._labels[idx]
+        return inputs, labels 
 
     def write_datapoint(self, input_data, label):
         path = self.output_manager.get_path_to_new_train_sample()
