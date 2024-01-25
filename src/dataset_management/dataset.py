@@ -10,15 +10,18 @@ class DatasetFileManagerToPytorchDataset(Dataset):
 
     def __init__(
         self,
+        datafolders_manager,
         name=None,
         mode="read",
         identifiers=dict(),
         unwanted_characteristics=dict(),
+        samples_to_load=None,
         **kwargs,
     ):
         self.name = name
         self.mode = mode
         self.identifiers = identifiers
+        self.samples_to_load = samples_to_load
         if self.mode == "read":
             wanted_characteristics = {
                 "dataset_type": self.__class__.__name__,
@@ -27,14 +30,14 @@ class DatasetFileManagerToPytorchDataset(Dataset):
             if not name is None:
                 wanted_characteristics["dataset_name"] = self.name
             self.input_manager = DatasetInputManager(
-                wanted_characteristics, unwanted_characteristics
+                datafolders_manager, wanted_characteristics, unwanted_characteristics
             )
         elif self.mode == "write":
             assert not name is None
             for required_identifier in self.required_identifiers:
                 assert required_identifier in identifiers.keys()
             self.output_manager = DatasetOutputManager(
-                self.name, self.__class__.__name__, identifiers
+                datafolders_manager, self.name, self.__class__.__name__, identifiers
             )
         self._loaded_labels = None  # Indexable
         self._loaded_inputs = None  # Indexable
@@ -53,8 +56,8 @@ class DatasetFileManagerToPytorchDataset(Dataset):
         return len(self._labels)
 
     def __getitem__(self, idx):
-        inputs, labels =self._inputs[idx], self._labels[idx]
-        return inputs, labels 
+        inputs, labels = self._inputs[idx], self._labels[idx]
+        return inputs, labels
 
     def write_datapoint(self, input_data, label):
         path = self.output_manager.get_path_to_new_train_sample()
@@ -68,14 +71,16 @@ class DatasetFileManagerToPytorchDataset(Dataset):
 
     def load_dataset(self):
         print("Loading Dataset")
-        n_samples = len(self.input_manager.file_paths)
-        for i, file_path in tqdm(enumerate(self.input_manager.file_paths)):
+        if self.samples_to_load is None:
+            paths_to_load = self.input_manager.file_paths
+        else:
+            paths_to_load = self.input_manager.file_paths[: self.samples_to_load]
+        print(self.input_manager)
+        n_samples = len(paths_to_load)
+        self._loaded_inputs = [None for _ in range(n_samples)]
+        self._loaded_labels = [None for _ in range(n_samples)]
+        for i, file_path in tqdm(enumerate(paths_to_load),total=n_samples):
             inpt, labl = self.read_sample(file_path)
-            if i == 0:
-                inpts_shape = [n_samples] + list(inpt.shape)
-                labls_shape = [n_samples] + list(labl.shape)
-                self._loaded_inputs = torch.zeros(inpts_shape)
-                self._loaded_labels = torch.zeros(labls_shape)
             self._loaded_inputs[i] = torch.Tensor(inpt)
             self._loaded_labels[i] = torch.Tensor(labl)
 
@@ -89,3 +94,9 @@ class DatasetFileManagerToPytorchDataset(Dataset):
         print("Initializing dataset")
         self.load_dataset()
         self.process_raw_inputs()
+
+    def get_loaded_inputs(self):
+        return self._loaded_inputs
+
+    def get_loaded_labels(self):
+        return self._loaded_labels

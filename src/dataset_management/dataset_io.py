@@ -8,22 +8,20 @@ class DataFoldersManager:
     instances = []
 
     @classmethod
-    def get_current_instance(cls):
+    def get_current_instance(cls,datafolder_group):
         if len(cls.instances) == 0:
-            return cls()
+            return cls(datafolder_group)
         else:
-            return cls.instances[0]
+            for instance in cls.instances:
+                if datafolder_group == instance.datafolder_group:
+                    return instance
+            return cls(datafolder_group)
 
-    def __init__(self, datafolder_group="depth_image_feature_extraction"):
+    def __init__(self, datafolder_group):
         self.datafolder_group = datafolder_group
         self.index_dict = []
         self.index: list[DataFolder] = []
-        if len(self.__class__.instances) == 1:
-            raise Exception(
-                f"There can only be one instance of the class {self.__class__}."
-            )
-        else:
-            self.__class__.instances.append(self)
+        self.__class__.instances.append(self)
         self.base_folder = os.path.join(
             os.environ["HOME"], ".datasets", datafolder_group
         )
@@ -295,9 +293,9 @@ class DatasetInputManager:
 
     def __init__(
         self,
+        datafolders_manager: DataFoldersManager, 
         wanted_characteristics: dict,
         unwanted_characteristics: dict,
-        datafolders_manager: DataFoldersManager = DataFoldersManager.get_current_instance(),
     ):
         self.datafolders_manager = datafolders_manager
         self.wanted_characteristics = wanted_characteristics
@@ -332,10 +330,10 @@ class DatasetOutputManager:
 
     def __init__(
         self,
+        datafolders_manager: DataFoldersManager ,
         dataset_name: str,
         dataset_type: str,
         identifiers: dict,
-        datafolders_manager: DataFoldersManager = DataFoldersManager.get_current_instance(),
     ):
         self.datafolders_manager = datafolders_manager
         self.dataset_name = dataset_name
